@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>محول الرصيد - MOATAZ</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f0f0f0;
+      text-align: center;
+      padding: 20px;
+      transition: background 0.5s;
+    }
+
+    .logo {
+      font-size: 30px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    #companyLogo {
+      height: 60px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: #004d40;
+      margin-bottom: 15px;
+    }
+
+    input, select, button {
+      padding: 12px;
+      font-size: 18px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin: 10px;
+      width: 80%;
+      max-width: 300px;
+    }
+
+    button {
+      background-color: #0288d1;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0277bd;
+    }
+
+    #result {
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #e8f5e9;
+      border: 2px solid #4CAF50;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 350px;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 18px;
+      color: #1b5e20;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 14px;
+      color: #777;
+    }
+
+    #downloadBtn {
+      display: none;
+      margin-top: 10px;
+      background-color: #4caf50;
+    }
+
+    #resetBtn {
+      background-color: #ff5722;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logo" id="pageLogo">MOATAZ</div>
+  <img id="companyLogo" src="" alt="شعار الشركة" style="display:none">
+
+  <h2>تحويل الرصيد الصافي إلى المبلغ المدفوع</h2>
+
+  <select id="company" onchange="changeCompany()">
+    <option value="" disabled selected>اختر شركة الاتصالات</option>
+    <option value="vodafone">فودافون</option>
+    <option value="orange">أورنج</option>
+    <option value="etisalat">اتصالات</option>
+    <option value="we">WE</option>
+  </select>
+  <br>
+
+  <input type="number" id="netBalance" placeholder="ادخل الرصيد الصافي بالجنيه">
+  <br>
+  <button onclick="convert()">تحويل</button>
+  <button id="resetBtn" onclick="resetPage()">إعادة تعيين</button>
+
+  <div id="result" style="display:none;"></div>
+  <button id="downloadBtn" onclick="downloadPDF()">تحميل النتيجة PDF</button>
+
+  <footer>جميع الحقوق محفوظة &copy; MOATAZ</footer>
+
+  <script>
+    const logos = {
+      vodafone: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Vodafone_icon.svg/512px-Vodafone_icon.svg.png",
+      orange: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Orange_logo.svg/512px-Orange_logo.svg.png",
+      etisalat: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Etisalat_Logo.svg/512px-Etisalat_Logo.svg.png",
+      we: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Telecom_Egypt_Logo.png/512px-Telecom_Egypt_Logo.png"
+    };
+
+    const discounts = {
+      vodafone: 0.80,
+      orange: 0.79,
+      etisalat: 0.78,
+      we: 0.77
+    };
+
+    const colors = {
+      vodafone: "#ffebee",
+      orange: "#fff3e0",
+      etisalat: "#e8f5e9",
+      we: "#ede7f6"
+    };
+
+    function changeCompany() {
+      const company = document.getElementById("company").value;
+      document.body.style.backgroundColor = colors[company];
+      const logoImg = document.getElementById("companyLogo");
+      logoImg.src = logos[company];
+      logoImg.style.display = "block";
+    }
+
+    function convert() {
+      const net = parseFloat(document.getElementById("netBalance").value);
+      const company = document.getElementById("company").value;
+      if (!company) {
+        alert("من فضلك اختر شركة الاتصالات");
+        return;
+      }
+      if (isNaN(net) || net <= 0) {
+        alert("من فضلك أدخل مبلغ صحيح");
+        return;
+      }
+
+      const discount = discounts[company];
+      const paid = net / discount;
+      const now = new Date();
+      const timeString = now.toLocaleString('ar-EG');
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.style.display = "block";
+      resultDiv.innerHTML = `
+        <strong>النتيجة:</strong><br>
+        الرصيد الصافي: ${net} جنيه<br>
+        الشركة: ${company.toUpperCase()}<br>
+        نسبة الخصم: ${(100 - (discount * 100)).toFixed(1)}%<br>
+        المبلغ المدفوع التقريبي: <strong>${paid.toFixed(2)} جنيه</strong><br>
+        التاريخ والوقت: ${timeString}
+      `;
+
+      document.getElementById("downloadBtn").style.display = "inline-block";
+    }
+
+    function resetPage() {
+      document.getElementById("company").value = "";
+      document.getElementById("netBalance").value = "";
+      document.getElementById("result").style.display = "none";
+      document.getElementById("downloadBtn").style.display = "none";
+      document.getElementById("companyLogo").style.display = "none";
+      document.body.style.backgroundColor = "#f0f0f0";
+    }
+
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const net = document.getElementById("netBalance").value;
+      const company = document.getElementById("company").value;
+      const discount = discounts[company];
+      const paid = (net / discount).toFixed(2);
+      const timeString = new Date().toLocaleString('ar-EG');
+
+      doc.setFont("Arial");
+      doc.setFontSize(16);
+      doc.text("محول الرصيد - MOATAZ", 20, 20);
+      doc.text(`الشركة: ${company.toUpperCase()}`, 20, 40);
+      doc.text(`الرصيد الصافي: ${net} جنيه`, 20, 50);
+      doc.text(`نسبة الخصم: ${(100 - discount * 100).toFixed(1)}%`, 20, 60);
+      doc.text(`المبلغ المدفوع التقريبي: ${paid} جنيه`, 20, 70);
+      doc.text(`التاريخ والوقت: ${timeString}`, 20, 80);
+      doc.save("moataz_rasid.pdf");
+    }
+  </script>
+
+</body>
+</html>
+<button id="downloadBtn" onclick="downloadPDF()">تحميل النتيجة PDF</button>
+<button id="whatsappBtn" onclick="shareWhatsApp()" style="display:none; background-color: #25D366;">مشاركة واتساب</button>
